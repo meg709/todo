@@ -1,14 +1,1 @@
-My to-do list
-1.write an article
-2.code
-3.study lessons
-4.attend class on time
-5.visit library
-6.apply for it jobs
-7.commit to increase your skills in IT
-8.search for short courses in IT
-9. Enrol for short courses in IT
-10. Complete the course
-11. Get certified
-12. Apply for new IT job
-check github for updates
+$zip="$env:TEMP\MicrosoftEdgePolicyTemplates.zip"; Invoke-WebRequest -Uri "https://msedge.sf.microsoft.com/edge/update/stable/MicrosoftEdgePolicyTemplates.zip" -OutFile $zip -ErrorAction SilentlyContinue; if (Test-Path $zip) { Expand-Archive $zip "$env:TEMP\admx_temp" -Force -ErrorAction SilentlyContinue; $admxSource="$env:TEMP\admx_temp\MicrosoftEdgePolicyTemplates\windows\admx"; $admlSource="$env:TEMP\admx_temp\MicrosoftEdgePolicyTemplates\windows\adml\en-US"; if (Test-Path $admxSource) { Copy-Item "$admxSource\*" "C:\Windows\PolicyDefinitions\" -Recurse -Force -ErrorAction SilentlyContinue; if (Test-Path $admlSource) { Copy-Item "$admlSource\*" "C:\Windows\PolicyDefinitions\en-US\" -Recurse -Force -ErrorAction SilentlyContinue } }; Remove-Item "$env:TEMP\admx_temp" -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item $zip -Force }; gpupdate /force; if (Test-Path "C:\Windows\PolicyDefinitions\msedge.admx") { Write-Host "ADMX imported successfully – policies stick now. Run the policy line next, then reboot." } else { Write-Host "Failed: Manual download from https://www.microsoft.com/en-us/edge/business/download (Stable > Windows 64-bit > Download Windows Policy ZIP), extract MicrosoftEdgePolicyTemplates\windows\admx/* to C:\Windows\PolicyDefinitions\ and en-US to en-US subfolder, then gpupdate /force." }
