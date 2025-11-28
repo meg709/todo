@@ -9,7 +9,6 @@ $kiosk_configuration = @"
       <KioskModeApp 
           v4:ClassicAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" 
           v4:ClassicAppArguments="--kiosk https://library.nyp.edu.sg --edge-kiosk-type=public-browsing --kiosk-idle-timeout-minutes=10 --no-first-run" />
-      <!-- ONLY THESE TWO SITES ALLOWED -->
       <Browser>
         <AllowedUrls>
           <UrlEntry Url="https://library.nyp.edu.sg/*" />
@@ -19,15 +18,16 @@ $kiosk_configuration = @"
     </Profile>
   </Profiles>
   <Configs>
+    <!-- This dummy UserGroup line satisfies Windows so it stops throwing the generic error -->
     <Config>
-      <!-- REMOVED AutoLogonAccount line completely = no auto-login & no password prompt -->
+      <UserGroup Type="LocalUser" Name="kioskUser0" />
       <DefaultProfile Id="{EDB3036B-780D-487D-A375-69369D8A8F78}" />
     </Config>
   </Configs>
 </AssignedAccessConfiguration>
 "@
 
-# Apply it
+# Apply it (this part is exactly the same as yours)
 $get_cim_instance = @{
     Namespace = "root\cimv2\mdm\dmmap"
     ClassName = "MDM_AssignedAccess"
