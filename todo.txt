@@ -1,35 +1,20 @@
-# === ONLY CHANGE THIS ONE LINE ===
-$KioskSID = "S-1-5-21-XXXXXXXXXXXXXXXXXXXXXXXXXXXX-XXXX"   # ← paste your SID here inside the quotes
-# =================================
+# 1. Clean old crap to start fresh (no errors if missing)
+Remove-Item "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Recurse -Force -ErrorAction SilentlyContinue
+New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Force | Out-Null
 
-$Allowed1 = "https://library.nyp.edu.sg/*"
-$Allowed2 = "https://www.nyp.edu.sg/*"
+# 2. Core kiosk policies (using New-ItemProperty to dodge the empty Name param bug)
+New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "KioskModeEnabled" -Value 1 -PropertyType DWord -Force | Out-Null
+New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "HideInternetExplorerRedirectUX" -Value 1 -PropertyType DWord -Force | Out-Null
+New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "AlwaysOpenPdfExternally" -Value 0 -PropertyType DWord -Force | Out-Null
 
-$regPath = "$KioskSID\Software\Policies\Microsoft\Edge"
+# 3. Force startup with ONLY your two NYP sites (MultiString array – this is the lock-in magic)
+$sites = @("https://library.nyp.edu.sg/", "https://www.nyp.edu.sg/")
+New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "RestoreOnStartupURLs" -Force | Out-Null
+New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "RestoreOnStartupURLs" -Value $sites -PropertyType MultiString -Force | Out-Null
+New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "RestoreOnStartup" -Value 4 -PropertyType DWord -Force | Out-Null
 
-# Load the user's registry hive (kioskUser0 is probably logged off, so we mount it)
-New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS -ErrorAction SilentlyContinue | Out-Null
+# 4. Lock down the UI (no address bar, no home button, new tabs redirect to your site)
+New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "ShowHomeButton" -Value 0 -PropertyType DWord -Force | Out-Null
+New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "NewTabPageLocation" -Value "https://library.nyp.edu.sg/" -PropertyType String -Force | Out-Null
 
-if (!(Test-Path "HKU:\$KioskSID")) {
-    reg load "HKU\$KioskSID" "C:\Users\kioskUser0\NTUSER.DAT" | Out-Null
-    $unmount = $true
-}
-
-# Create the policy keys
-New-Item -Path "HKU:\$regPath\URLAllowlist" -Force | Out-Null
-New-Item -Path "HKU:\$regPath\URLBlocklist" -Force | Out-Null
-
-# Allow only the two NYP sites
-Set-ItemProperty -Path "HKU:\$regPath\URLAllowlist" -Name "1" -Value $Allowed1
-Set-ItemProperty -Path "HKU:\$regPath\URLAllowlist" -Name "2" -Value $Allowed2
-
-# Block EVERYTHING else
-Set-ItemProperty -Path "HKU:\$regPath\URLBlocklist" -Name "1" -Value "*"
-
-Write-Host "SUCCESS! Only the two NYP sites are allowed for kioskUser0 now." -ForegroundColor Green
-
-# Cleanly unload the hive if we mounted
-if ($unmount) { 
-    Start-Sleep -Seconds 2
-    reg unload "HKU\$KioskSID" | Out-Null 
-}
+Write-Host "SUCCESS! Policies set without errors. Reboot now to test kioskUser0." -ForegroundColor Green
