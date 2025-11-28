@@ -1,20 +1,40 @@
-# 1. Clean old crap to start fresh (no errors if missing)
-Remove-Item "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Recurse -Force -ErrorAction SilentlyContinue
-New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Force | Out-Null
+$kiosk_configuration = @"
+<?xml version="1.0" encoding="utf-8"?>
+<AssignedAccessConfiguration 
+    xmlns="http://schemas.microsoft.com/AssignedAccess/2017/config" 
+    xmlns:rs5="http://schemas.microsoft.com/AssignedAccess/201810/config" 
+    xmlns:v4="http://schemas.microsoft.com/AssignedAccess/2021/config">
+  <Profiles>
+    <Profile Id="{EDB3036B-780D-487D-A375-69369D8A8F78}">
+      <KioskModeApp 
+          v4:ClassicAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" 
+          v4:ClassicAppArguments="--kiosk https://library.nyp.edu.sg --edge-kiosk-type=public-browsing --kiosk-idle-timeout-minutes=10 --no-first-run" />
+      <!-- THIS IS THE MAGIC THAT LOCKS IT TO ONLY THE TWO NYP SITES -->
+      <Browser>
+        <AllowedUrls>
+          <UrlEntry Url="https://library.nyp.edu.sg/*" />
+          <UrlEntry Url="https://www.nyp.edu.sg/*" />
+        </AllowedUrls>
+      </Browser>
+    </Profile>
+  </Profiles>
+  <Configs>
+    <Config>
+      <AutoLogonAccount rs5:DisplayName="PublicUser" />
+      <DefaultProfile Id="{EDB3036B-780D-487D-A375-69369D8A8F78}" />
+    </Config>
+  </Configs>
+</AssignedAccessConfiguration>
+"@
 
-# 2. Core kiosk policies (using New-ItemProperty to dodge the empty Name param bug)
-New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "KioskModeEnabled" -Value 1 -PropertyType DWord -Force | Out-Null
-New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "HideInternetExplorerRedirectUX" -Value 1 -PropertyType DWord -Force | Out-Null
-New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "AlwaysOpenPdfExternally" -Value 0 -PropertyType DWord -Force | Out-Null
+# Apply the fixed config
+$get_cim_instance = @{
+    Namespace = "root\cimv2\mdm\dmmap"
+    ClassName = "MDM_AssignedAccess"
+}
+$cim_instance = Get-CimInstance @get_cim_instance
+$cim_instance.Configuration = [System.Net.WebUtility]::HtmlEncode($kiosk_configuration)
+Set-CimInstance -CimInstance $cim_instance
 
-# 3. Force startup with ONLY your two NYP sites (MultiString array – this is the lock-in magic)
-$sites = @("https://library.nyp.edu.sg/", "https://www.nyp.edu.sg/")
-New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "RestoreOnStartupURLs" -Force | Out-Null
-New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "RestoreOnStartupURLs" -Value $sites -PropertyType MultiString -Force | Out-Null
-New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "RestoreOnStartup" -Value 4 -PropertyType DWord -Force | Out-Null
-
-# 4. Lock down the UI (no address bar, no home button, new tabs redirect to your site)
-New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "ShowHomeButton" -Value 0 -PropertyType DWord -Force | Out-Null
-New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "NewTabPageLocation" -Value "https://library.nyp.edu.sg/" -PropertyType String -Force | Out-Null
-
-Write-Host "SUCCESS! Policies set without errors. Reboot now to test kioskUser0." -ForegroundColor Green
+Write-Host "Done. Reboot and ONLY the two NYP sites will work." -ForegroundColor Green
+Restart-Computer -Force
