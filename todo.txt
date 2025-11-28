@@ -1,39 +1,25 @@
-$kiosk_configuration = @"
+$kiosk_configuration = 
+@"
 <?xml version="1.0" encoding="utf-8"?>
-<AssignedAccessConfiguration 
-    xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns="http://schemas.microsoft.com/AssignedAccess/2017/config" 
-    xmlns:rs5="http://schemas.microsoft.com/AssignedAccess/201810/config" 
-    xmlns:br="http://schemas.microsoft.com/AssignedAccess/2017/config/browser"
-    xmlns:v4="http://schemas.microsoft.com/AssignedAccess/2021/config">
+<AssignedAccessConfiguration xmlns="http://schemas.microsoft.com/AssignedAccess/2017/config" xmlns:rs5="http://schemas.microsoft.com/AssignedAccess/201810/config" xmlns:v4="http://schemas.microsoft.com/AssignedAccess/2021/config">
   <Profiles>
     <Profile Id="{EDB3036B-780D-487D-A375-69369D8A8F78}">
-      <KioskModeApp 
-          v4:ClassicAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" 
-          v4:ClassicAppArguments="--kiosk https://library.nyp.edu.sg --edge-kiosk-type=public-browsing --kiosk-idle-timeout-minutes=10 --no-first-run" />
-      <!-- ONLY THESE TWO SITES ALLOWED (blocks everything else) -->
-      <br:Browser>
-        <br:AllowedUrls>
-          <br:UrlEntry Url="https://library.nyp.edu.sg/*" />
-          <br:UrlEntry Url="https://www.nyp.edu.sg/*" />
-        </br:AllowedUrls>
-      </br:Browser>
+      <KioskModeApp v4:ClassicAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" v4:ClassicAppArguments="--kiosk https://library.nyp.edu.sg --edge-kiosk-type=public-browsing --kiosk-idle-timeout-minutes=10 --no-first-run" />
     </Profile>
   </Profiles>
   <Configs>
     <Config>
-      <!-- Binds to kioskUser0 (no auto-login, no password) -->
-      <UserGroup Type="LocalUser" Name="kioskUser0" />
+      <AutoLogonAccount rs5:DisplayName="Kiosk" />
       <DefaultProfile Id="{EDB3036B-780D-487D-A375-69369D8A8F78}" />
     </Config>
   </Configs>
 </AssignedAccessConfiguration>
 "@
 
-# Apply it (your exact code)
+# Configure KIOSK mode
 $get_cim_instance = @{
-    Namespace = "root\cimv2\mdm\dmmap"
-    ClassName = "MDM_AssignedAccess"
+  Namespace = "root\cimv2\mdm\dmmap"
+  ClassName = "MDM_AssignedAccess"
 }
 $cim_instance = Get-CimInstance @get_cim_instance
 $cim_instance.Configuration = [System.Net.WebUtility]::HtmlEncode($kiosk_configuration)
