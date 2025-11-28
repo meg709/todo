@@ -9,7 +9,7 @@ $kiosk_configuration = @"
       <KioskModeApp 
           v4:ClassicAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" 
           v4:ClassicAppArguments="--kiosk https://library.nyp.edu.sg --edge-kiosk-type=public-browsing --kiosk-idle-timeout-minutes=10 --no-first-run" />
-      <!-- THIS IS THE MAGIC THAT LOCKS IT TO ONLY THE TWO NYP SITES -->
+      <!-- ONLY THESE TWO SITES ALLOWED -->
       <Browser>
         <AllowedUrls>
           <UrlEntry Url="https://library.nyp.edu.sg/*" />
@@ -20,14 +20,14 @@ $kiosk_configuration = @"
   </Profiles>
   <Configs>
     <Config>
-      <AutoLogonAccount rs5:DisplayName="PublicUser" />
+      <!-- REMOVED AutoLogonAccount line completely = no auto-login & no password prompt -->
       <DefaultProfile Id="{EDB3036B-780D-487D-A375-69369D8A8F78}" />
     </Config>
   </Configs>
 </AssignedAccessConfiguration>
 "@
 
-# Apply the fixed config
+# Apply it
 $get_cim_instance = @{
     Namespace = "root\cimv2\mdm\dmmap"
     ClassName = "MDM_AssignedAccess"
@@ -35,6 +35,3 @@ $get_cim_instance = @{
 $cim_instance = Get-CimInstance @get_cim_instance
 $cim_instance.Configuration = [System.Net.WebUtility]::HtmlEncode($kiosk_configuration)
 Set-CimInstance -CimInstance $cim_instance
-
-Write-Host "Done. Reboot and ONLY the two NYP sites will work." -ForegroundColor Green
-Restart-Computer -Force
