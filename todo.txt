@@ -1,22 +1,8 @@
-Name                          : {c256731f-5dad-4e7b-8177-57e82af8726c}
-DisplayName                   : Block All Outbound
-Description                   :
-DisplayGroup                  :
-Group                         :
-Enabled                       : True
-Profile                       : Any
-Platform                      : {}
-Direction                     : Outbound
-Action                        : Block
-EdgeTraversalPolicy           : Block
-LooseSourceMapping            : False
-LocalOnlyMapping              : False
-Owner                         :
-PrimaryStatus                 : OK
-Status                        : The rule was parsed successfully from the store. (65536)
-EnforcementStatus             : NotApplicable
-PolicyStoreSource             : PersistentStore
-PolicyStoreSourceType         : Local
-RemoteDynamicKeywordAddresses : {}
-PolicyAppId                   :
-PackageFamilyName             :
+# 1️⃣ Reset firewall state so old broken rules don't interfere
+netsh advfirewall reset
+
+# 2️⃣ Allow Edge to reach ONLY the NYP domains (HTTPS)
+New-NetFirewallRule -DisplayName "Allow_NYP_Edge" -Direction Outbound -Action Allow -Protocol TCP -RemotePort 443 -RemoteAddress "104.18.26.131","104.18.25.131" -Program "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" -Enabled True
+
+# 3️⃣ Block Edge from going anywhere else
+New-NetFirewallRule -DisplayName "Block_All_Other_Edge" -Direction Outbound -Action Block -Program "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" -Enabled True
