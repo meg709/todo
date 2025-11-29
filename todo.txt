@@ -1,9 +1,22 @@
-127.0.0.1 localhost
-::1 localhost
-
-# Block all
-0.0.0.0 *
-
-# Allowed sites
-library.nyp.edu.sg
-nyp.edu.sg
+Name                          : {c256731f-5dad-4e7b-8177-57e82af8726c}
+DisplayName                   : Block All Outbound
+Description                   :
+DisplayGroup                  :
+Group                         :
+Enabled                       : True
+Profile                       : Any
+Platform                      : {}
+Direction                     : Outbound
+Action                        : Block
+EdgeTraversalPolicy           : Block
+LooseSourceMapping            : False
+LocalOnlyMapping              : False
+Owner                         :
+PrimaryStatus                 : OK
+Status                        : The rule was parsed successfully from the store. (65536)
+EnforcementStatus             : NotApplicable
+PolicyStoreSource             : PersistentStore
+PolicyStoreSourceType         : Local
+RemoteDynamicKeywordAddresses : {}
+PolicyAppId                   :
+PackageFamilyName             :
