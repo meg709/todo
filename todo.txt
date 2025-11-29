@@ -1,32 +1,68 @@
-# --- Load PublicUser Registry Hive ---
-reg load "HKU\TempPublicUser" "C:\Users\PublicUser\NTUSER.DAT"
+PS C:\WINDOWS\system32>
+PS C:\WINDOWS\system32> New-NetFirewallRule -DisplayName "Block All Outbound" `
+>>
 
-$edgeKeyPath = "Registry::HKEY_USERS\TempPublicUser\Software\Policies\Microsoft\Edge"
 
-# Create the Edge policies key if missing
-New-Item -Path $edgeKeyPath -Force | Out-Null
+Name                          : {0329ae19-89d1-4c07-a9d2-9dd1d29fc2e6}
+DisplayName                   : Block All Outbound
+Description                   :
+DisplayGroup                  :
+Group                         :
+Enabled                       : True
+Profile                       : Any
+Platform                      : {}
+Direction                     : Inbound
+Action                        : Allow
+EdgeTraversalPolicy           : Block
+LooseSourceMapping            : False
+LocalOnlyMapping              : False
+Owner                         :
+PrimaryStatus                 : OK
+Status                        : The rule was parsed successfully from the store. (65536)
+EnforcementStatus             : NotApplicable
+PolicyStoreSource             : PersistentStore
+PolicyStoreSourceType         : Local
+RemoteDynamicKeywordAddresses : {}
+PolicyAppId                   :
+PackageFamilyName             :
 
-# Allow only the two NYP websites (MultiString)
-New-ItemProperty -Path $edgeKeyPath -Name "URLAllowlist" -Value @(
-    "https://library.nyp.edu.sg/*",
-    "https://www.nyp.edu.sg/*"
-) -PropertyType MultiString -Force
 
-# Block all other sites (MultiString)
-New-ItemProperty -Path $edgeKeyPath -Name "URLBlocklist" -Value @("*") -PropertyType MultiString -Force
 
-# OPTIONAL: Block downloads completely (DWord)
-New-ItemProperty -Path $edgeKeyPath -Name "DownloadRestrictions" -Value 3 -PropertyType DWord -Force
+PS C:\WINDOWS\system32>     -Direction Outbound `
+>>
+-Direction : The term '-Direction' is not recognized as the name of a cmdlet, function, script file, or operable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:5
++     -Direction Outbound `
++     ~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (-Direction:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
 
-# OPTIONAL: Disable InPrivate mode (DWord) — If needed
-New-ItemProperty -Path $edgeKeyPath -Name "InPrivateModeAvailability" -Value 1 -PropertyType DWord -Force
+PS C:\WINDOWS\system32>     -Action Block `
+>>
+-Action : The term '-Action' is not recognized as the name of a cmdlet, function, script file, or operable program. Check
+the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:5
++     -Action Block `
++     ~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (-Action:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
 
-# Display what is configured
-Write-Host "`n--- CURRENT PUBLICUSER EDGE POLICY VALUES ---"
-Get-ItemProperty -Path $edgeKeyPath
+PS C:\WINDOWS\system32>     -Profile Any `
+>>
+-Profile : The term '-Profile' is not recognized as the name of a cmdlet, function, script file, or operable program. Check
+the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:5
++     -Profile Any `
++     ~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (-Profile:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
 
-# Unload the hive (IMPORTANT!)
-reg unload "HKU\TempPublicUser"
-
-Write-Host "`nDONE → Log into PublicUser and launch Edge."
-Write-Host "Only the 2 NYP websites should work now."
+PS C:\WINDOWS\system32>     -Enabled True
+-Enabled : The term '-Enabled' is not recognized as the name of a cmdlet, function, script file, or operable program. Check
+the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:5
++     -Enabled True
++     ~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (-Enabled:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
