@@ -39,3 +39,23 @@ Reason Denied	Empty
 WMI Filtershide
 Name	Value	Reference GPO(s)
 None
+
+S C:\WINDOWS\system32> reg query "HKLM\Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings"
+
+HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings
+    CallLegacyWCMPolicies    REG_DWORD    0x0
+
+HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings\Cache
+PS C:\WINDOWS\system32>
+PS C:\WINDOWS\system32>
+EY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings\Cache
+PS C:\WINDOWS\system32>
+PS C:\WINDOWS\system32> Test-NetConnection www.nyp.edu.sg -Port 443
+
+
+ComputerName     : www.nyp.edu.sg
+RemoteAddress    : 151.101.131.10
+RemotePort       : 443
+InterfaceAlias   : Ethernet0
+SourceAddress    : 192.168.232.128
+TcpTestSucceeded : True
