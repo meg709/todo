@@ -1,47 +1,78 @@
-# Run this block in an elevated PowerShell window (Run as Administrator)
+SUCCESS. Policy applied. Log off and back on to test.
+PS C:\WINDOWS\system32> # Run this block in an elevated PowerShell window (Run as Administrator)
+>>
+>> # --- 0. Set Variables ---
+>> $Username = "PublicUser"
+>> $HiveName = "TempPublic"
+>> $UserPath = "C:\Users\$Username\NTUSER.DAT"
+>> $CorrectedEdgePolicyPath = "HKEY_USERS\$HiveName\Software\Policies\Microsoft\Edge"
+>>
+>> # --- 1. Load PublicUser's registry hive ---
+>> Write-Host "1. Loading PublicUser's registry hive..." -ForegroundColor Yellow
+>> reg load HKU\$HiveName "$UserPath"
+>>
+>> # --- 2. Create the necessary Policy Keys (Clean Recreation) ---
+>> Write-Host "2. Creating fresh URLAllowlist and URLBlocklist keys..." -ForegroundColor Yellow
+>> Remove-Item "Registry::$CorrectedEdgePolicyPath" -Recurse -Force -ErrorAction SilentlyContinue
+>> New-Item "Registry::$CorrectedEdgePolicyPath" -Force
+>> New-Item "Registry::$CorrectedEdgePolicyPath\URLAllowlist" -Force
+>> New-Item "Registry::$CorrectedEdgePolicyPath\URLBlocklist" -Force
+>>
+>> $AllowlistPath = "Registry::$CorrectedEdgePolicyPath\URLAllowlist"
+>> $BlocklistPath = "Registry::$CorrectedEdgePolicyPath\URLBlocklist"
+>>
+>> # --- 3. The Block Rule (Blocking Everything) ---
+>> Write-Host "3. Setting the Global Block rule (*)..." -ForegroundColor Yellow
+>> Set-ItemProperty $BlocklistPath -Name 1 -Value "*"
+>>
+>> # --- 4. The Allow List (NYP + Necessary CDNs to Prevent Failure) ---
+>> Write-Host "4. Setting the Expanded Allowlist rules..." -ForegroundColor Yellow
+>> # NYP Sites (Crucial: trailing wildcard for sub-paths)
+>> Set-ItemProperty $AllowlistPath -Name 1 -Value "https://library.nyp.edu.sg/*"
+>> Set-ItemProperty $AllowlistPath -Name 2 -Value "https://www.nyp.edu.sg/*"
+>> Set-ItemProperty $AllowlistPath -Name 3 -Value "http://library.nyp.edu.sg/*"
+>> Set-ItemProperty $AllowlistPath -Name 4 -Value "http://www.nyp.edu.sg/*"
+>>
+>> # Essential External Services (Prevents the sites from appearing 'blocked' due to missing assets)
+>> Set-ItemProperty $AllowlistPath -Name 5 -Value "https://cdnjs.cloudflare.com/*"
+>> Set-ItemProperty $AllowlistPath -Name 6 -Value "https://fonts.googleapis.com/*"
+>> Set-ItemProperty $AllowlistPath -Name 7 -Value "https://fonts.gstatic.com/*"
+>> Set-ItemProperty $AllowlistPath -Name 8 -Value "https://code.jquery.com/*"
+>> Set-ItemProperty $AllowlistPath -Name 9 -Value "https://use.fontawesome.com/*"
+>>
+>> # --- 5. Unload the hive ---
+>> Write-Host "5. Unloading the registry hive..." -ForegroundColor Yellow
+>> reg unload HKU\$HiveName
+>>
+>> Write-Host ""
+>> Write-Host "SUCCESS. Policy applied. Log off and back on to test." -ForegroundColor Green
+>>
+1. Loading PublicUser's registry hive...
+The operation completed successfully.
+2. Creating fresh URLAllowlist and URLBlocklist keys...
 
-# --- 0. Set Variables ---
-$Username = "PublicUser"
-$HiveName = "TempPublic"
-$UserPath = "C:\Users\$Username\NTUSER.DAT"
-$CorrectedEdgePolicyPath = "HKEY_USERS\$HiveName\Software\Policies\Microsoft\Edge" 
 
-# --- 1. Load PublicUser's registry hive ---
-Write-Host "1. Loading PublicUser's registry hive..." -ForegroundColor Yellow
-reg load HKU\$HiveName "$UserPath"
+    Hive: HKEY_USERS\TempPublic\Software\Policies\Microsoft
 
-# --- 2. Create the necessary Policy Keys (Clean Recreation) ---
-Write-Host "2. Creating fresh URLAllowlist and URLBlocklist keys..." -ForegroundColor Yellow
-Remove-Item "Registry::$CorrectedEdgePolicyPath" -Recurse -Force -ErrorAction SilentlyContinue
-New-Item "Registry::$CorrectedEdgePolicyPath" -Force
-New-Item "Registry::$CorrectedEdgePolicyPath\URLAllowlist" -Force
-New-Item "Registry::$CorrectedEdgePolicyPath\URLBlocklist" -Force
 
-$AllowlistPath = "Registry::$CorrectedEdgePolicyPath\URLAllowlist"
-$BlocklistPath = "Registry::$CorrectedEdgePolicyPath\URLBlocklist"
+Name                           Property
+----                           --------
+Edge
 
-# --- 3. The Block Rule (Blocking Everything) ---
-Write-Host "3. Setting the Global Block rule (*)..." -ForegroundColor Yellow
-Set-ItemProperty $BlocklistPath -Name 1 -Value "*"
 
-# --- 4. The Allow List (NYP + Necessary CDNs to Prevent Failure) ---
-Write-Host "4. Setting the Expanded Allowlist rules..." -ForegroundColor Yellow
-# NYP Sites (Crucial: trailing wildcard for sub-paths)
-Set-ItemProperty $AllowlistPath -Name 1 -Value "https://library.nyp.edu.sg/*"
-Set-ItemProperty $AllowlistPath -Name 2 -Value "https://www.nyp.edu.sg/*"
-Set-ItemProperty $AllowlistPath -Name 3 -Value "http://library.nyp.edu.sg/*"
-Set-ItemProperty $AllowlistPath -Name 4 -Value "http://www.nyp.edu.sg/*"
+    Hive: HKEY_USERS\TempPublic\Software\Policies\Microsoft\Edge
 
-# Essential External Services (Prevents the sites from appearing 'blocked' due to missing assets)
-Set-ItemProperty $AllowlistPath -Name 5 -Value "https://cdnjs.cloudflare.com/*"
-Set-ItemProperty $AllowlistPath -Name 6 -Value "https://fonts.googleapis.com/*"
-Set-ItemProperty $AllowlistPath -Name 7 -Value "https://fonts.gstatic.com/*"
-Set-ItemProperty $AllowlistPath -Name 8 -Value "https://code.jquery.com/*"
-Set-ItemProperty $AllowlistPath -Name 9 -Value "https://use.fontawesome.com/*"
 
-# --- 5. Unload the hive ---
-Write-Host "5. Unloading the registry hive..." -ForegroundColor Yellow
-reg unload HKU\$HiveName
+Name                           Property
+----                           --------
+URLAllowlist
+URLBlocklist
+3. Setting the Global Block rule (*)...
+4. Setting the Expanded Allowlist rules...
+5. Unloading the registry hive...
+ERROR: Access is denied.
 
-Write-Host ""
-Write-Host "SUCCESS. Policy applied. Log off and back on to test." -ForegroundColor Green
+SUCCESS. Policy applied. Log off and back on to test.
+
+
+PS C:\WINDOWS\system32>
