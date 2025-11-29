@@ -1,57 +1,41 @@
-S C:\WINDOWS\system32> # 1️⃣ Reset firewall state so old broken rules don't interfere
->> netsh advfirewall reset
->>
->> # 2️⃣ Allow Edge to reach ONLY the NYP domains (HTTPS)
->> New-NetFirewallRule -DisplayName "Allow_NYP_Edge" -Direction Outbound -Action Allow -Protocol TCP -RemotePort 443 -RemoteAddress "104.18.26.131","104.18.25.131" -Program "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" -Enabled True
->>
->> # 3️⃣ Block Edge from going anywhere else
->> New-NetFirewallRule -DisplayName "Block_All_Other_Edge" -Direction Outbound -Action Block -Program "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" -Enabled True
-Ok.
-
-
-
-Name                          : {76a12ad8-fda0-40b4-8d24-6b83c753ffd6}
-DisplayName                   : Allow_NYP_Edge
-Description                   :
-DisplayGroup                  :
-Group                         :
-Enabled                       : True
-Profile                       : Any
-Platform                      : {}
-Direction                     : Outbound
-Action                        : Allow
-EdgeTraversalPolicy           : Block
-LooseSourceMapping            : False
-LocalOnlyMapping              : False
-Owner                         :
-PrimaryStatus                 : OK
-Status                        : The rule was parsed successfully from the store. (65536)
-EnforcementStatus             : NotApplicable
-PolicyStoreSource             : PersistentStore
-PolicyStoreSourceType         : Local
-RemoteDynamicKeywordAddresses : {}
-PolicyAppId                   :
-PackageFamilyName             :
-
-Name                          : {bdc517ea-7ff8-492e-9860-e16cb09837f4}
-DisplayName                   : Block_All_Other_Edge
-Description                   :
-DisplayGroup                  :
-Group                         :
-Enabled                       : True
-Profile                       : Any
-Platform                      : {}
-Direction                     : Outbound
-Action                        : Block
-EdgeTraversalPolicy           : Block
-LooseSourceMapping            : False
-LocalOnlyMapping              : False
-Owner                         :
-PrimaryStatus                 : OK
-Status                        : The rule was parsed successfully from the store. (65536)
-EnforcementStatus             : NotApplicable
-PolicyStoreSource             : PersistentStore
-PolicyStoreSourceType         : Local
-RemoteDynamicKeywordAddresses : {}
-PolicyAppId                   :
-PackageFamilyName             :
+Group Policy Objectshide
+Applied GPOshide
+Local Group Policy [LocalGPO]hide
+Link Location	Local
+Extensions Configured	{B1BE8D72-6EAC-11D2-A4EA-00C04F79F83A}
+Registry
+Enforced	No
+Disabled	None
+Security Filters	 
+Revision	AD (36), SYSVOL (36)
+WMI Filter	 
+Denied GPOshide
+WMI Filtershide
+Name	Value	Reference GPO(s)
+None
+User Detailshide
+Generalhide
+User name	OSAWindows11\SIT
+Domain	Local
+Security Group Membership	
+show
+Component Statushide
+Component Name	Status	Time Taken	Last Process Time	Event Log
+Group Policy Infrastructure	Success	23 Millisecond(s)	29/11/2025 9:27:38 pm	View Log
+Settingshide
+No settings defined.
+Group Policy Objectshide
+Applied GPOshide
+Denied GPOshide
+Local Group Policy [LocalGPO]hide
+Link Location	Local
+Extensions Configured	 
+Enforced	No
+Disabled	None
+Security Filters	 
+Revision	AD (0), SYSVOL (0)
+WMI Filter	 
+Reason Denied	Empty
+WMI Filtershide
+Name	Value	Reference GPO(s)
+None
