@@ -1,6 +1,9 @@
 127.0.0.1 localhost
 ::1 localhost
 
-# Allow NYP Sites
+# Block all
+0.0.0.0 *
+
+# Allowed sites
 library.nyp.edu.sg
 nyp.edu.sg
