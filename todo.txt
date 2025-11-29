@@ -1,26 +1,61 @@
-$kiosk_configuration = 
-@"
-<?xml version="1.0" encoding="utf-8"?>
-<AssignedAccessConfiguration xmlns="http://schemas.microsoft.com/AssignedAccess/2017/config" xmlns:rs5="http://schemas.microsoft.com/AssignedAccess/201810/config" xmlns:v4="http://schemas.microsoft.com/AssignedAccess/2021/config">
-  <Profiles>
-    <Profile Id="{EDB3036B-780D-487D-A375-69369D8A8F78}">
-      <KioskModeApp v4:ClassicAppPath="%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" v4:ClassicAppArguments="--kiosk https://library.nyp.edu.sg --proxy-server=127.0.0.1:3128 --edge-kiosk-type=public-browsing --kiosk-idle-timeout-minutes=10 --no-first-run" />
-    </Profile>
-  </Profiles>
-  <Configs>
-    <Config>
-      <AutoLogonAccount rs5:DisplayName="PublicUser" />
-      <DefaultProfile Id="{EDB3036B-780D-487D-A375-69369D8A8F78}" />
-    </Config>
-  </Configs>
-</AssignedAccessConfiguration>
-"@
+# ------------ START SCRIPT ------------
 
-# Configure KIOSK mode
-$get_cim_instance = @{
-  Namespace = "root\cimv2\mdm\dmmap"
-  ClassName = "MDM_AssignedAccess"
+# Set the PublicUser username
+$username = "PublicUser"
+
+# Path to the user's NTUSER.DAT
+$userProfilePath = "C:\Users\$username"
+$userHivePath = "$userProfilePath\NTUSER.DAT"
+
+# Temporary hive name
+$tempHive = "TempPublicUser"
+
+# Load the user's hive
+try {
+    reg load "HKU\$tempHive" $userHivePath
+    Write-Host "Loaded $username hive as HKU\$tempHive"
+} catch {
+    Write-Host "ERROR: Could not load user hive. Make sure no processes are running for $username." -ForegroundColor Red
+    exit 1
 }
-$cim_instance = Get-CimInstance @get_cim_instance
-$cim_instance.Configuration = [System.Net.WebUtility]::HtmlEncode($kiosk_configuration)
-Set-CimInstance -CimInstance $cim_instance
+
+# Define Edge policies path
+$edgeKeyPath = "HKU:\$tempHive\Software\Policies\Microsoft\Edge"
+
+# Create the key if it doesn't exist
+if (-not (Test-Path $edgeKeyPath)) {
+    New-Item -Path $edgeKeyPath -Force | Out-Null
+}
+
+# Set URLAllowlist (only these 2 sites)
+$allowList = @(
+    "https://library.nyp.edu.sg",
+    "https://www.nyp.edu.sg"
+)
+Set-ItemProperty -Path $edgeKeyPath -Name "URLAllowlist" -Value $allowList -Type MultiString
+
+# Set URLBlocklist (everything else blocked)
+Set-ItemProperty -Path $edgeKeyPath -Name "URLBlocklist" -Value @("*") -Type MultiString
+
+# Optional: disable downloads entirely (3 = Block all)
+Set-ItemProperty -Path $edgeKeyPath -Name "DownloadRestrictions" -Value 3 -Type DWord
+
+# Optional: disable InPrivate mode
+Set-ItemProperty -Path $edgeKeyPath -Name "InPrivateModeAvailability" -Value 2 -Type DWord
+
+# Optional: block all extensions
+Set-ItemProperty -Path $edgeKeyPath -Name "ExtensionInstallBlocklist" -Value @("*") -Type MultiString
+
+# Verify: read back values
+Write-Host "---- Written values for HKU\$tempHive\Software\Policies\Microsoft\Edge ----"
+Get-ItemProperty -Path $edgeKeyPath | Select-Object URLAllowlist, URLBlocklist, DownloadRestrictions, InPrivateModeAvailability, ExtensionInstallBlocklist | Format-List
+
+# Unload the hive
+reg unload "HKU\$tempHive"
+Write-Host "Unloaded $username hive"
+
+Write-Host ""
+Write-Host "DONE. When $username next logs in and launches Edge, only the 2 NYP websites will be accessible."
+Write-Host "------------------------------------------------------------"
+
+# ------------ END SCRIPT ------------
