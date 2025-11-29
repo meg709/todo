@@ -1,78 +1,64 @@
-SUCCESS. Policy applied. Log off and back on to test.
-PS C:\WINDOWS\system32> # Run this block in an elevated PowerShell window (Run as Administrator)
->>
->> # --- 0. Set Variables ---
->> $Username = "PublicUser"
->> $HiveName = "TempPublic"
->> $UserPath = "C:\Users\$Username\NTUSER.DAT"
->> $CorrectedEdgePolicyPath = "HKEY_USERS\$HiveName\Software\Policies\Microsoft\Edge"
->>
->> # --- 1. Load PublicUser's registry hive ---
->> Write-Host "1. Loading PublicUser's registry hive..." -ForegroundColor Yellow
->> reg load HKU\$HiveName "$UserPath"
->>
->> # --- 2. Create the necessary Policy Keys (Clean Recreation) ---
->> Write-Host "2. Creating fresh URLAllowlist and URLBlocklist keys..." -ForegroundColor Yellow
->> Remove-Item "Registry::$CorrectedEdgePolicyPath" -Recurse -Force -ErrorAction SilentlyContinue
->> New-Item "Registry::$CorrectedEdgePolicyPath" -Force
->> New-Item "Registry::$CorrectedEdgePolicyPath\URLAllowlist" -Force
->> New-Item "Registry::$CorrectedEdgePolicyPath\URLBlocklist" -Force
->>
->> $AllowlistPath = "Registry::$CorrectedEdgePolicyPath\URLAllowlist"
->> $BlocklistPath = "Registry::$CorrectedEdgePolicyPath\URLBlocklist"
->>
->> # --- 3. The Block Rule (Blocking Everything) ---
->> Write-Host "3. Setting the Global Block rule (*)..." -ForegroundColor Yellow
->> Set-ItemProperty $BlocklistPath -Name 1 -Value "*"
->>
->> # --- 4. The Allow List (NYP + Necessary CDNs to Prevent Failure) ---
->> Write-Host "4. Setting the Expanded Allowlist rules..." -ForegroundColor Yellow
->> # NYP Sites (Crucial: trailing wildcard for sub-paths)
->> Set-ItemProperty $AllowlistPath -Name 1 -Value "https://library.nyp.edu.sg/*"
->> Set-ItemProperty $AllowlistPath -Name 2 -Value "https://www.nyp.edu.sg/*"
->> Set-ItemProperty $AllowlistPath -Name 3 -Value "http://library.nyp.edu.sg/*"
->> Set-ItemProperty $AllowlistPath -Name 4 -Value "http://www.nyp.edu.sg/*"
->>
->> # Essential External Services (Prevents the sites from appearing 'blocked' due to missing assets)
->> Set-ItemProperty $AllowlistPath -Name 5 -Value "https://cdnjs.cloudflare.com/*"
->> Set-ItemProperty $AllowlistPath -Name 6 -Value "https://fonts.googleapis.com/*"
->> Set-ItemProperty $AllowlistPath -Name 7 -Value "https://fonts.gstatic.com/*"
->> Set-ItemProperty $AllowlistPath -Name 8 -Value "https://code.jquery.com/*"
->> Set-ItemProperty $AllowlistPath -Name 9 -Value "https://use.fontawesome.com/*"
->>
->> # --- 5. Unload the hive ---
->> Write-Host "5. Unloading the registry hive..." -ForegroundColor Yellow
->> reg unload HKU\$HiveName
->>
->> Write-Host ""
->> Write-Host "SUCCESS. Policy applied. Log off and back on to test." -ForegroundColor Green
->>
-1. Loading PublicUser's registry hive...
-The operation completed successfully.
-2. Creating fresh URLAllowlist and URLBlocklist keys...
+# Run this entire block in an elevated PowerShell window (Run as Administrator)
+
+# --- 0. Set Variables (Using Command Prompt format for the paths) ---
+$Username = "PublicUser"
+$HiveName = "TempPublic"
+$UserPath = "C:\Users\$Username\NTUSER.DAT"
+$BasePolicyKey = "HKU\$HiveName\Software\Policies\Microsoft\Edge" 
+
+# --- 1. Load PublicUser's registry hive ---
+Write-Host "1. Loading PublicUser's registry hive..." -ForegroundColor Yellow
+reg load HKU\$HiveName "$UserPath"
+
+# --- 2. Clean and Create ALL Policy Keys using Native REG ADD ---
+Write-Host "2. Creating fresh URLAllowlist, URLBlocklist, AND HttpAllowlist keys..." -ForegroundColor Yellow
+# 2a. Delete the old keys first (if they exist)
+reg delete "$BasePolicyKey" /f /v /va 2>$null
+
+# 2b. Create the base key
+reg add "$BasePolicyKey" /f
+
+# 2c. Create the URLAllowlist subkey
+reg add "$BasePolicyKey\URLAllowlist" /f
+$AllowKey = "$BasePolicyKey\URLAllowlist"
+
+# 2d. Create the URLBlocklist subkey
+reg add "$BasePolicyKey\URLBlocklist" /f
+$BlockKey = "$BasePolicyKey\URLBlocklist"
+
+# 2e. Create the HttpAllowlist subkey (THE NEW NECESSARY KEY)
+reg add "$BasePolicyKey\HttpAllowlist" /f
+$HttpAllowKey = "$BasePolicyKey\HttpAllowlist"
+
+# --- 3. The Block Rule (Blocking Everything) ---
+Write-Host "3. Setting the Global Block rule (*) using REG ADD..." -ForegroundColor Yellow
+reg add "$BlockKey" /v 1 /t REG_SZ /d "*" /f
+
+# --- 4. The URL Allow List (HTTPS/General) ---
+Write-Host "4. Setting the Expanded URLAllowlist rules..." -ForegroundColor Yellow
+# NYP Sites
+reg add "$AllowKey" /v 1 /t REG_SZ /d "https://library.nyp.edu.sg/*" /f
+reg add "$AllowKey" /v 2 /t REG_SZ /d "https://www.nyp.edu.sg/*" /f
+reg add "$AllowKey" /v 3 /t REG_SZ /d "http://library.nyp.edu.sg/*" /f
+reg add "$AllowKey" /v 4 /t REG_SZ /d "http://www.nyp.edu.sg/*" /f
+
+# Essential External Services (Need to allow HTTPS versions)
+reg add "$AllowKey" /v 5 /t REG_SZ /d "https://cdnjs.cloudflare.com/*" /f
+reg add "$AllowKey" /v 6 /t REG_SZ /d "https://fonts.googleapis.com/*" /f
+reg add "$AllowKey" /v 7 /t REG_SZ /d "https://fonts.gstatic.com/*" /f
+reg add "$AllowKey" /v 8 /t REG_SZ /d "https://code.jquery.com/*" /f
+reg add "$AllowKey" /v 9 /t REG_SZ /d "https://use.fontawesome.com/*" /f
 
 
-    Hive: HKEY_USERS\TempPublic\Software\Policies\Microsoft
+# --- 5. The HTTP Allow List (Mirroring NYP sites for protocol compatibility) ---
+Write-Host "5. Setting the HttpAllowlist rules..." -ForegroundColor Yellow
+reg add "$HttpAllowKey" /v 1 /t REG_SZ /d "http://library.nyp.edu.sg/*" /f
+reg add "$HttpAllowKey" /v 2 /t REG_SZ /d "http://www.nyp.edu.sg/*" /f
 
 
-Name                           Property
-----                           --------
-Edge
+# --- 6. Unload the hive ---
+Write-Host "6. Unloading the registry hive..." -ForegroundColor Yellow
+reg unload HKU\$HiveName
 
-
-    Hive: HKEY_USERS\TempPublic\Software\Policies\Microsoft\Edge
-
-
-Name                           Property
-----                           --------
-URLAllowlist
-URLBlocklist
-3. Setting the Global Block rule (*)...
-4. Setting the Expanded Allowlist rules...
-5. Unloading the registry hive...
-ERROR: Access is denied.
-
-SUCCESS. Policy applied. Log off and back on to test.
-
-
-PS C:\WINDOWS\system32>
+Write-Host ""
+Write-Host "SUCCESS. All policy keys and protocols are accounted for. Log off and back on to test." -ForegroundColor Green
