@@ -1,116 +1,32 @@
-# ------------ START SCRIPT ------------
+# --- Load PublicUser Registry Hive ---
+reg load "HKU\TempPublicUser" "C:\Users\PublicUser\NTUSER.DAT"
 
-# Set the PublicUser username
-$username = "PublicUser"
+$edgeKeyPath = "Registry::HKEY_USERS\TempPublicUser\Software\Policies\Microsoft\Edge"
 
-# Path to the user's NTUSER.DAT
-$userProfilePath = "C:\Users\$username"
-$userHivePath = "$userProfilePath\NTUSER.DAT"
+# Create the Edge policies key if missing
+New-Item -Path $edgeKeyPath -Force | Out-Null
 
-# Temporary hive name
-$tempHive = "TempPublicUser"
+# Allow only the two NYP websites (MultiString)
+New-ItemProperty -Path $edgeKeyPath -Name "URLAllowlist" -Value @(
+    "https://library.nyp.edu.sg/*",
+    "https://www.nyp.edu.sg/*"
+) -PropertyType MultiString -Force
 
-# Load the user's hive
-try {
-    reg load "HKU\$tempHive" $userHivePath
-    Write-Host "Loaded $username hive as HKU\$tempHive"
-} catch {
-    Write-Host "ERROR: Could not load user hive. Make sure no processes are running for $username." -ForegroundColor Red
-    exit 1
-}
+# Block all other sites (MultiString)
+New-ItemProperty -Path $edgeKeyPath -Name "URLBlocklist" -Value @("*") -PropertyType MultiString -Force
 
-# Define Edge policies path
-$edgeKeyPath = "HKU:\$tempHive\Software\Policies\Microsoft\Edge"
+# OPTIONAL: Block downloads completely (DWord)
+New-ItemProperty -Path $edgeKeyPath -Name "DownloadRestrictions" -Value 3 -PropertyType DWord -Force
 
-# Create the key if it doesn't exist
-if (-not (Test-Path $edgeKeyPath)) {
-    New-Item -Path $edgeKeyPath -Force | Out-Null
-}
+# OPTIONAL: Disable InPrivate mode (DWord) — If needed
+New-ItemProperty -Path $edgeKeyPath -Name "InPrivateModeAvailability" -Value 1 -PropertyType DWord -Force
 
-# Set URLAllowlist (only these 2 sites)
-$allowList = @(
-    "https://library.nyp.edu.sg",
-    "https://www.nyp.edu.sg"
-)
-Set-ItemProperty -Path $edgeKeyPath -Name "URLAllowlist" -Value $allowList -Type MultiString
+# Display what is configured
+Write-Host "`n--- CURRENT PUBLICUSER EDGE POLICY VALUES ---"
+Get-ItemProperty -Path $edgeKeyPath
 
-# Set URLBlocklist (everything else blocked)
-Set-ItemProperty -Path $edgeKeyPath -Name "URLBlocklist" -Value @("*") -Type MultiString
+# Unload the hive (IMPORTANT!)
+reg unload "HKU\TempPublicUser"
 
-# Optional: disable downloads entirely (3 = Block all)
-Set-ItemProperty -Path $edgeKeyPath -Name "DownloadRestrictions" -Value 3 -Type DWord
-
-# Optional: disable InPrivate mode
-Set-ItemProperty -Path $edgeKeyPath -Name "InPrivateModeAvailability" -Value 2 -Type DWord
-
-# Optional: block all extensions
-Set-ItemProperty -Path $edgeKeyPath -Name "ExtensionInstallBlocklist" -Value @("*") -Type MultiString
-
-# Verify: read back values
-Write-Host "---- Written values for HKU\$tempHive\Software\Policies\Microsoft\Edge ----"
-Get-ItemProperty -Path $edgeKeyPath | Select-Object URLAllowlist, URLBlocklist, DownloadRestrictions, InPrivateModeAvailability, ExtensionInstallBlocklist | Format-List
-
-# Unload the hive
-reg unload "HKU\$tempHive"
-Write-Host "Unloaded $username hive"
-
-Write-Host ""
-Write-Host "DONE. When $username next logs in and launches Edge, only the 2 NYP websites will be accessible."
-Write-Host "------------------------------------------------------------"
-
-# ------------ END SCRIPT ------------
-New-Item : Cannot find drive. A drive with the name 'HKU' does not exist.
-At line:27 char:5
-+     New-Item -Path $edgeKeyPath -Force | Out-Null
-+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : ObjectNotFound: (HKU:String) [New-Item], DriveNotFoundException
-    + FullyQualifiedErrorId : DriveNotFound,Microsoft.PowerShell.Commands.NewItemCommand
-
-Set-ItemProperty : A parameter cannot be found that matches parameter name 'Type'.
-At line:35 char:76
-+ ... ath $edgeKeyPath -Name "URLAllowlist" -Value $allowList -Type MultiSt ...
-+                                                             ~~~~~
-    + CategoryInfo          : InvalidArgument: (:) [Set-ItemProperty], ParameterBindingException
-    + FullyQualifiedErrorId : NamedParameterNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
-
-Set-ItemProperty : A parameter cannot be found that matches parameter name 'Type'.
-At line:38 char:72
-+ ... y -Path $edgeKeyPath -Name "URLBlocklist" -Value @("*") -Type MultiSt ...
-+                                                             ~~~~~
-    + CategoryInfo          : InvalidArgument: (:) [Set-ItemProperty], ParameterBindingException
-    + FullyQualifiedErrorId : NamedParameterNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
-
-Set-ItemProperty : A parameter cannot be found that matches parameter name 'Type'.
-At line:41 char:75
-+ ...  -Path $edgeKeyPath -Name "DownloadRestrictions" -Value 3 -Type DWord
-+                                                               ~~~~~
-    + CategoryInfo          : InvalidArgument: (:) [Set-ItemProperty], ParameterBindingException
-    + FullyQualifiedErrorId : NamedParameterNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
-
-Set-ItemProperty : A parameter cannot be found that matches parameter name 'Type'.
-At line:44 char:80
-+ ... h $edgeKeyPath -Name "InPrivateModeAvailability" -Value 2 -Type DWord
-+                                                               ~~~~~
-    + CategoryInfo          : InvalidArgument: (:) [Set-ItemProperty], ParameterBindingException
-    + FullyQualifiedErrorId : NamedParameterNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
-
-Set-ItemProperty : A parameter cannot be found that matches parameter name 'Type'.
-At line:47 char:85
-+ ... KeyPath -Name "ExtensionInstallBlocklist" -Value @("*") -Type MultiSt ...
-+                                                             ~~~~~
-    + CategoryInfo          : InvalidArgument: (:) [Set-ItemProperty], ParameterBindingException
-    + FullyQualifiedErrorId : NamedParameterNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
-
----- Written values for HKU\TempPublicUser\Software\Policies\Microsoft\Edge ----
-Get-ItemProperty : Cannot find drive. A drive with the name 'HKU' does not exist.
-At line:51 char:1
-+ Get-ItemProperty -Path $edgeKeyPath | Select-Object URLAllowlist, URL ...
-+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : ObjectNotFound: (HKU:String) [Get-ItemProperty], DriveNotFoundException
-    + FullyQualifiedErrorId : DriveNotFound,Microsoft.PowerShell.Commands.GetItemPropertyCommand
-
-The operation completed successfully.
-Unloaded PublicUser hive
-
-DONE. When PublicUser next logs in and launches Edge, only the 2 NYP websites will be accessible.
-------------------------------------------------------------
+Write-Host "`nDONE → Log into PublicUser and launch Edge."
+Write-Host "Only the 2 NYP websites should work now."
