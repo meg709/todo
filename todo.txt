@@ -1,38 +1,6 @@
-# --- 1. Clear All Browser Policies (Machine and User) ---
-Write-Host "1. Clearing all browser policies (Edge and Chrome)..." -ForegroundColor Red
-Remove-Item "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item "HKLM:\SOFTWARE\Policies\Google\Chrome" -Recurse -Force -ErrorAction SilentlyContinue
+127.0.0.1 localhost
+::1 localhost
 
-# --- 2. Clear All Network Configuration Hooks ---
-Write-Host "2. Resetting Network and Firewall Hooks..." -ForegroundColor Red
-# Resets the TCP/IP stack (resolves hidden network/driver blocks)
-netsh int ip reset
-# Resets the Windows Sockets (resolves Winsock API corruption)
-netsh winsock reset
-# Resets the Windows Firewall to its default settings
-netsh advfirewall reset
-
-# --- 3. Clear All DNS, Hosts, and Caches ---
-Write-Host "3. Clearing DNS, Hosts File, and Policy Cache..." -ForegroundColor Red
-# Clears DNS resolution cache
-ipconfig /flushdns
-# Forces Windows to re-read all Group Policy settings and refresh user profile
-gpupdate /force
-
-# --- 4. Remove Any Policy Override Scripts/Tasks ---
-Write-Host "4. Removing all override scripts and tasks..." -ForegroundColor Red
-# Removes the scheduled task
-schtasks /delete /tn "Policy Override for PublicUser" /f 2>$null
-# Removes the script file
-Remove-Item "C:\FixPolicy.ps1" -Force -ErrorAction SilentlyContinue
-
-# --- 5. Clean Host File Entries (The most direct path) ---
-Write-Host "5. Cleaning Host File entries (ensuring no hard-coded blocks remain)..." -ForegroundColor Red
-$hostsPath = "C:\Windows\System32\drivers\etc\hosts"
-# Reads the file, keeps only the standard content, and removes all previous hard-coded blocks
-(Get-Content $hostsPath) | 
-  Where-Object { $_ -notmatch "151.101" -and $_ -notmatch "0.0.0.0" } |
-  Set-Content $hostsPath -Force
-
-Write-Host ""
-Write-Host "SUCCESS: System cleanup complete. You MUST restart the PC now." -ForegroundColor Green
+# Allow NYP Sites
+library.nyp.edu.sg
+nyp.edu.sg
