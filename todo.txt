@@ -1,49 +1,73 @@
-# Run this entire block in an elevated PowerShell window (Run as Administrator)
+3. Creating the base policy key...
+New-Item : Cannot find drive. A drive with the name 'HKU' does not exist.
+At line:22 char:1
++ New-Item "$EdgePolicyPath" -Force
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (HKU:String) [New-Item], DriveNotFoundException
+    + FullyQualifiedErrorId : DriveNotFound,Microsoft.PowerShell.Commands.NewItemCommand
 
-# --- 0. Set the username/hive for clarity ---
-$Username = "PublicUser"
-$HiveName = "TempPublic"
-$UserPath = "C:\Users\$Username\NTUSER.DAT"
+4. Creating URL subkeys...
+New-Item : Cannot find drive. A drive with the name 'HKU' does not exist.
+At line:26 char:1
++ New-Item "$EdgePolicyPath\URLAllowlist" -Force
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (HKU:String) [New-Item], DriveNotFoundException
+    + FullyQualifiedErrorId : DriveNotFound,Microsoft.PowerShell.Commands.NewItemCommand
 
-# --- 1. Load PublicUser's registry hive (If it fails here, confirm the user name is correct) ---
-Write-Host "1. Loading PublicUser's registry hive..." -ForegroundColor Yellow
-reg load HKU\$HiveName "$UserPath"
+New-Item : Cannot find drive. A drive with the name 'HKU' does not exist.
+At line:27 char:1
++ New-Item "$EdgePolicyPath\URLBlocklist" -Force
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (HKU:String) [New-Item], DriveNotFoundException
+    + FullyQualifiedErrorId : DriveNotFound,Microsoft.PowerShell.Commands.NewItemCommand
 
-# --- 2. Define the base policy path ---
-$EdgePolicyPath = "HKU:\$HiveName\Software\Policies\Microsoft\Edge"
+5. Setting the Allowlist rules...
+Set-ItemProperty : Cannot find drive. A drive with the name 'HKU' does not exist.
+At line:31 char:1
++ Set-ItemProperty "$EdgePolicyPath\URLAllowlist" -Name 1 -Value "https ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (HKU:String) [Set-ItemProperty], DriveNotFoundException
+    + FullyQualifiedErrorId : DriveNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
 
-# --- 3. Nuke old garbage and create the base Edge key (Ensuring the parent exists first!) ---
-Write-Host "2. Nuking old policy garbage..." -ForegroundColor Yellow
-# Safely remove the entire existing structure first
-Remove-Item "$EdgePolicyPath" -Recurse -Force -ErrorAction SilentlyContinue 
+Set-ItemProperty : Cannot find drive. A drive with the name 'HKU' does not exist.
+At line:32 char:1
++ Set-ItemProperty "$EdgePolicyPath\URLAllowlist" -Name 2 -Value "https ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (HKU:String) [Set-ItemProperty], DriveNotFoundException
+    + FullyQualifiedErrorId : DriveNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
 
-# Explicitly create the base policy key *before* creating its children
-Write-Host "3. Creating the base policy key..." -ForegroundColor Yellow
-New-Item "$EdgePolicyPath" -Force
+Set-ItemProperty : Cannot find drive. A drive with the name 'HKU' does not exist.
+At line:33 char:1
++ Set-ItemProperty "$EdgePolicyPath\URLAllowlist" -Name 3 -Value "http: ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (HKU:String) [Set-ItemProperty], DriveNotFoundException
+    + FullyQualifiedErrorId : DriveNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
 
-# --- 4. Create the URLAllowlist and URLBlocklist subkeys ---
-Write-Host "4. Creating URL subkeys..." -ForegroundColor Yellow
-New-Item "$EdgePolicyPath\URLAllowlist" -Force
-New-Item "$EdgePolicyPath\URLBlocklist" -Force
+Set-ItemProperty : Cannot find drive. A drive with the name 'HKU' does not exist.
+At line:34 char:1
++ Set-ItemProperty "$EdgePolicyPath\URLAllowlist" -Name 4 -Value "http: ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (HKU:String) [Set-ItemProperty], DriveNotFoundException
+    + FullyQualifiedErrorId : DriveNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
 
-# --- 5. Allow ONLY the two NYP sites (HTTP + HTTPS + wildcards) ---
-Write-Host "5. Setting the Allowlist rules..." -ForegroundColor Yellow
-Set-ItemProperty "$EdgePolicyPath\URLAllowlist" -Name 1 -Value "https://library.nyp.edu.sg/*"
-Set-ItemProperty "$EdgePolicyPath\URLAllowlist" -Name 2 -Value "https://www.nyp.edu.sg/*"
-Set-ItemProperty "$EdgePolicyPath\URLAllowlist" -Name 3 -Value "http://library.nyp.edu.sg/*"
-Set-ItemProperty "$EdgePolicyPath\URLAllowlist" -Name 4 -Value "http://www.nyp.edu.sg/*"
+6. Setting the Global Block rule...
+Set-ItemProperty : Cannot find drive. A drive with the name 'HKU' does not exist.
+At line:38 char:1
++ Set-ItemProperty "$EdgePolicyPath\URLBlocklist" -Name 1 -Value "*"
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (HKU:String) [Set-ItemProperty], DriveNotFoundException
+    + FullyQualifiedErrorId : DriveNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
 
-# --- 6. Block literally everything else ---
-Write-Host "6. Setting the Global Block rule..." -ForegroundColor Yellow
-Set-ItemProperty "$EdgePolicyPath\URLBlocklist" -Name 1 -Value "*"
+7. Setting Ephemeral Profile policy...
+Set-ItemProperty : A parameter cannot be found that matches parameter name 'Type'.
+At line:42 char:76
++ ... "$EdgePolicyPath" -Name "ForceEphemeralProfiles" -Value 0 -Type DWord
++                                                               ~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [Set-ItemProperty], ParameterBindingException
+    + FullyQualifiedErrorId : NamedParameterNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
 
-# --- 7. Force the policies to take effect even in weird Edge modes ---
-Write-Host "7. Setting Ephemeral Profile policy..." -ForegroundColor Yellow
-Set-ItemProperty "$EdgePolicyPath" -Name "ForceEphemeralProfiles" -Value 0 -Type DWord
+8. Unloading the registry hive...
+The operation completed successfully.
 
-# --- 8. Unload the hive ---
-Write-Host "8. Unloading the registry hive..." -ForegroundColor Yellow
-reg unload HKU\$HiveName
-
-Write-Host ""
-Write-Host "SUCCESS. Policy applied to $Username's profile. You must log off and back on to test." -ForegroundColor Green
+SUCCESS. Policy applied to PublicUser's profile. You must log off and back on to test.
+PS C:\WINDOWS\system32>
