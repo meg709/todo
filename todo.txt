@@ -59,3 +59,58 @@ Write-Host "DONE. When $username next logs in and launches Edge, only the 2 NYP 
 Write-Host "------------------------------------------------------------"
 
 # ------------ END SCRIPT ------------
+New-Item : Cannot find drive. A drive with the name 'HKU' does not exist.
+At line:27 char:5
++     New-Item -Path $edgeKeyPath -Force | Out-Null
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (HKU:String) [New-Item], DriveNotFoundException
+    + FullyQualifiedErrorId : DriveNotFound,Microsoft.PowerShell.Commands.NewItemCommand
+
+Set-ItemProperty : A parameter cannot be found that matches parameter name 'Type'.
+At line:35 char:76
++ ... ath $edgeKeyPath -Name "URLAllowlist" -Value $allowList -Type MultiSt ...
++                                                             ~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [Set-ItemProperty], ParameterBindingException
+    + FullyQualifiedErrorId : NamedParameterNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
+
+Set-ItemProperty : A parameter cannot be found that matches parameter name 'Type'.
+At line:38 char:72
++ ... y -Path $edgeKeyPath -Name "URLBlocklist" -Value @("*") -Type MultiSt ...
++                                                             ~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [Set-ItemProperty], ParameterBindingException
+    + FullyQualifiedErrorId : NamedParameterNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
+
+Set-ItemProperty : A parameter cannot be found that matches parameter name 'Type'.
+At line:41 char:75
++ ...  -Path $edgeKeyPath -Name "DownloadRestrictions" -Value 3 -Type DWord
++                                                               ~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [Set-ItemProperty], ParameterBindingException
+    + FullyQualifiedErrorId : NamedParameterNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
+
+Set-ItemProperty : A parameter cannot be found that matches parameter name 'Type'.
+At line:44 char:80
++ ... h $edgeKeyPath -Name "InPrivateModeAvailability" -Value 2 -Type DWord
++                                                               ~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [Set-ItemProperty], ParameterBindingException
+    + FullyQualifiedErrorId : NamedParameterNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
+
+Set-ItemProperty : A parameter cannot be found that matches parameter name 'Type'.
+At line:47 char:85
++ ... KeyPath -Name "ExtensionInstallBlocklist" -Value @("*") -Type MultiSt ...
++                                                             ~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [Set-ItemProperty], ParameterBindingException
+    + FullyQualifiedErrorId : NamedParameterNotFound,Microsoft.PowerShell.Commands.SetItemPropertyCommand
+
+---- Written values for HKU\TempPublicUser\Software\Policies\Microsoft\Edge ----
+Get-ItemProperty : Cannot find drive. A drive with the name 'HKU' does not exist.
+At line:51 char:1
++ Get-ItemProperty -Path $edgeKeyPath | Select-Object URLAllowlist, URL ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (HKU:String) [Get-ItemProperty], DriveNotFoundException
+    + FullyQualifiedErrorId : DriveNotFound,Microsoft.PowerShell.Commands.GetItemPropertyCommand
+
+The operation completed successfully.
+Unloaded PublicUser hive
+
+DONE. When PublicUser next logs in and launches Edge, only the 2 NYP websites will be accessible.
+------------------------------------------------------------
