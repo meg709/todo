@@ -1,64 +1,20 @@
-# Run this entire block in an elevated PowerShell window (Run as Administrator)
+# 1. Load the PublicUser's Registry Hive
+reg load HKU\TempPublic "C:\Users\PublicUser\NTUSER.DAT"
 
-# --- 0. Set Variables (Using Command Prompt format for the paths) ---
-$Username = "PublicUser"
-$HiveName = "TempPublic"
-$UserPath = "C:\Users\$Username\NTUSER.DAT"
-$BasePolicyKey = "HKU\$HiveName\Software\Policies\Microsoft\Edge" 
+# 2. Clean and Create ALL Policy Keys
+# We delete the blocklist and create our own new, clean policy keys
+reg delete "HKU\TempPublic\Software\Policies\Microsoft\Edge" /f /v /va 2>$null
+reg add "HKU\TempPublic\Software\Policies\Microsoft\Edge" /f
+reg add "HKU\TempPublic\Software\Policies\Microsoft\Edge\URLAllowlist" /f
+reg add "HKU\TempPublic\Software\Policies\Microsoft\Edge\URLBlocklist" /f
 
-# --- 1. Load PublicUser's registry hive ---
-Write-Host "1. Loading PublicUser's registry hive..." -ForegroundColor Yellow
-reg load HKU\$HiveName "$UserPath"
+# 3. The Block Rule (Blocking Everything)
+reg add "HKU\TempPublic\Software\Policies\Microsoft\Edge\URLBlocklist" /v 1 /t REG_SZ /d "*" /f
 
-# --- 2. Clean and Create ALL Policy Keys using Native REG ADD ---
-Write-Host "2. Creating fresh URLAllowlist, URLBlocklist, AND HttpAllowlist keys..." -ForegroundColor Yellow
-# 2a. Delete the old keys first (if they exist)
-reg delete "$BasePolicyKey" /f /v /va 2>$null
+# 4. The URL Allow List (NYP + CDNs) - These need to run last to win precedence
+reg add "HKU\TempPublic\Software\Policies\Microsoft\Edge\URLAllowlist" /v 1 /t REG_SZ /d "https://library.nyp.edu.sg/*" /f
+reg add "HKU\TempPublic\Software\Policies\Microsoft\Edge\URLAllowlist" /v 2 /t REG_SZ /d "https://www.nyp.edu.sg/*" /f
+reg add "HKU\TempPublic\Software\Policies\Microsoft\Edge\URLAllowlist" /v 3 /t REG_SZ /d "https://cdnjs.cloudflare.com/*" /f
 
-# 2b. Create the base key
-reg add "$BasePolicyKey" /f
-
-# 2c. Create the URLAllowlist subkey
-reg add "$BasePolicyKey\URLAllowlist" /f
-$AllowKey = "$BasePolicyKey\URLAllowlist"
-
-# 2d. Create the URLBlocklist subkey
-reg add "$BasePolicyKey\URLBlocklist" /f
-$BlockKey = "$BasePolicyKey\URLBlocklist"
-
-# 2e. Create the HttpAllowlist subkey (THE NEW NECESSARY KEY)
-reg add "$BasePolicyKey\HttpAllowlist" /f
-$HttpAllowKey = "$BasePolicyKey\HttpAllowlist"
-
-# --- 3. The Block Rule (Blocking Everything) ---
-Write-Host "3. Setting the Global Block rule (*) using REG ADD..." -ForegroundColor Yellow
-reg add "$BlockKey" /v 1 /t REG_SZ /d "*" /f
-
-# --- 4. The URL Allow List (HTTPS/General) ---
-Write-Host "4. Setting the Expanded URLAllowlist rules..." -ForegroundColor Yellow
-# NYP Sites
-reg add "$AllowKey" /v 1 /t REG_SZ /d "https://library.nyp.edu.sg/*" /f
-reg add "$AllowKey" /v 2 /t REG_SZ /d "https://www.nyp.edu.sg/*" /f
-reg add "$AllowKey" /v 3 /t REG_SZ /d "http://library.nyp.edu.sg/*" /f
-reg add "$AllowKey" /v 4 /t REG_SZ /d "http://www.nyp.edu.sg/*" /f
-
-# Essential External Services (Need to allow HTTPS versions)
-reg add "$AllowKey" /v 5 /t REG_SZ /d "https://cdnjs.cloudflare.com/*" /f
-reg add "$AllowKey" /v 6 /t REG_SZ /d "https://fonts.googleapis.com/*" /f
-reg add "$AllowKey" /v 7 /t REG_SZ /d "https://fonts.gstatic.com/*" /f
-reg add "$AllowKey" /v 8 /t REG_SZ /d "https://code.jquery.com/*" /f
-reg add "$AllowKey" /v 9 /t REG_SZ /d "https://use.fontawesome.com/*" /f
-
-
-# --- 5. The HTTP Allow List (Mirroring NYP sites for protocol compatibility) ---
-Write-Host "5. Setting the HttpAllowlist rules..." -ForegroundColor Yellow
-reg add "$HttpAllowKey" /v 1 /t REG_SZ /d "http://library.nyp.edu.sg/*" /f
-reg add "$HttpAllowKey" /v 2 /t REG_SZ /d "http://www.nyp.edu.sg/*" /f
-
-
-# --- 6. Unload the hive ---
-Write-Host "6. Unloading the registry hive..." -ForegroundColor Yellow
-reg unload HKU\$HiveName
-
-Write-Host ""
-Write-Host "SUCCESS. All policy keys and protocols are accounted for. Log off and back on to test." -ForegroundColor Green
+# 5. Unload the Registry Hive
+reg unload HKU\TempPublic
