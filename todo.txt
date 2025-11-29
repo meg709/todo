@@ -1,29 +1,41 @@
->> Write-Host "SUCCESS. The policies should be correctly written now. Log off and back on to test." -ForegroundColor Green
-1. Loading PublicUser's registry hive...
-The operation completed successfully.
-2. Nuking old policy garbage and creating base policy key...
+# Run this entire block in an elevated PowerShell window (Run as Administrator)
 
+# --- 0. Set Variables ---
+$Username = "PublicUser"
+$HiveName = "TempPublic"
+$UserPath = "C:\Users\$Username\NTUSER.DAT"
+$HKLMEdgePolicyPath = "HKLM:\SOFTWARE\Policies\Microsoft\Edge"
+$HKLMGooglePolicyPath = "HKLM:\SOFTWARE\Policies\Google\Chrome"
+$HKUEdgePolicyPath = "HKEY_USERS\$HiveName\Software\Policies\Microsoft\Edge"
 
-    Hive: HKEY_USERS\TempPublic\Software\Policies\Microsoft
+# --- 1. Wipe Machine-Wide Edge Policies (Primary target for the 'edge://policy' block) ---
+Write-Host "1. Wiping Machine-Wide Edge Policies (HKLM)..." -ForegroundColor Red
+Remove-Item $HKLMEdgePolicyPath -Recurse -Force -ErrorAction SilentlyContinue
 
+# --- 2. Wipe Machine-Wide Chrome Policies (Just in case Edge is reading Chrome's policy location) ---
+Write-Host "2. Wiping Machine-Wide Chrome Policies (HKLM)..." -ForegroundColor Red
+Remove-Item $HKLMGooglePolicyPath -Recurse -Force -ErrorAction SilentlyContinue
 
-Name                           Property
-----                           --------
-Edge
-3. Creating URL subkeys...
+# --- 3. Load PublicUser's registry hive ---
+Write-Host "3. Loading PublicUser's registry hive..." -ForegroundColor Yellow
+reg load HKU\$HiveName "$UserPath"
 
+# --- 4. Wipe PublicUser's Edge Policies (User's specific block list) ---
+Write-Host "4. Wiping PublicUser's Edge Policies (HKU)..." -ForegroundColor Red
+Remove-Item "Registry::$HKUEdgePolicyPath" -Recurse -Force -ErrorAction SilentlyContinue
 
-    Hive: HKEY_USERS\TempPublic\Software\Policies\Microsoft\Edge
+# --- 5. Unload the hive ---
+Write-Host "5. Unloading the registry hive (Will likely show Access Denied)..." -ForegroundColor Yellow
+try {
+    reg unload HKU\$HiveName
+    Write-Host "Unload successful." -ForegroundColor Green
+} catch {
+    Write-Host "Unload failed. Ignoring." -ForegroundColor Yellow
+}
 
+# --- 6. Force Local Group Policy Update (To clear any cached GPOs) ---
+Write-Host "6. Forcing Local Group Policy Update..." -ForegroundColor Yellow
+gpupdate /force
 
-Name                           Property
-----                           --------
-URLAllowlist
-URLBlocklist
-4. Setting the Allowlist rules...
-5. Setting the Global Block rule...
-6. Setting Ephemeral Profile policy...
-7. Unloading the registry hive...
-ERROR: Access is denied.
-
-SUCCESS. The policies should be correctly written now. Log off and back on to test.
+Write-Host ""
+Write-Host "CRITICAL STEP: RESTART THE PC NOW AND LOG BACK IN AS PUBLICUSER TO TEST." -ForegroundColor Red
