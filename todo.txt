@@ -1,20 +1,25 @@
-# 1. Load the PublicUser's Registry Hive
-reg load HKU\TempPublic "C:\Users\PublicUser\NTUSER.DAT"
 
-# 2. Clean and Create ALL Policy Keys
-# We delete the blocklist and create our own new, clean policy keys
-reg delete "HKU\TempPublic\Software\Policies\Microsoft\Edge" /f /v /va 2>$null
-reg add "HKU\TempPublic\Software\Policies\Microsoft\Edge" /f
-reg add "HKU\TempPublic\Software\Policies\Microsoft\Edge\URLAllowlist" /f
-reg add "HKU\TempPublic\Software\Policies\Microsoft\Edge\URLBlocklist" /f
+PS C:\WINDOWS\system32> nslookup www.nyp.edu.sg
+Server:  dns.google
+Address:  8.8.8.8
 
-# 3. The Block Rule (Blocking Everything)
-reg add "HKU\TempPublic\Software\Policies\Microsoft\Edge\URLBlocklist" /v 1 /t REG_SZ /d "*" /f
+Non-authoritative answer:
+Name:    www.nyp.edu.sg
+Addresses:  151.101.67.10
+          151.101.3.10
+          151.101.195.10
+          151.101.131.10
 
-# 4. The URL Allow List (NYP + CDNs) - These need to run last to win precedence
-reg add "HKU\TempPublic\Software\Policies\Microsoft\Edge\URLAllowlist" /v 1 /t REG_SZ /d "https://library.nyp.edu.sg/*" /f
-reg add "HKU\TempPublic\Software\Policies\Microsoft\Edge\URLAllowlist" /v 2 /t REG_SZ /d "https://www.nyp.edu.sg/*" /f
-reg add "HKU\TempPublic\Software\Policies\Microsoft\Edge\URLAllowlist" /v 3 /t REG_SZ /d "https://cdnjs.cloudflare.com/*" /f
+PS C:\WINDOWS\system32>
+PS C:\WINDOWS\system32> nslookup library.nyp.edu.sg
+Server:  dns.google
+Address:  8.8.8.8
 
-# 5. Unload the Registry Hive
-reg unload HKU\TempPublic
+Non-authoritative answer:
+Name:    library.nyp.edu.sg
+Addresses:  151.101.131.10
+          151.101.67.10
+          151.101.195.10
+          151.101.3.10
+
+PS C:\WINDOWS\system32>
