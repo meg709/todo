@@ -1,25 +1,31 @@
+# --- 1. Aggressive Policy and Cache Cleanup ---
+Write-Host "1. Aggressively clearing all policies and caches..." -ForegroundColor Red
 
-PS C:\WINDOWS\system32> nslookup www.nyp.edu.sg
-Server:  dns.google
-Address:  8.8.8.8
+# Clear the machine-wide policies (just in case they were regenerated)
+Remove-Item "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item "HKLM:\SOFTWARE\Policies\Google\Chrome" -Recurse -Force -ErrorAction SilentlyContinue
 
-Non-authoritative answer:
-Name:    www.nyp.edu.sg
-Addresses:  151.101.67.10
-          151.101.3.10
-          151.101.195.10
-          151.101.131.10
+# Clear all network configuration hooks (Crucial for unblocking drivers)
+netsh int ip reset
+netsh winsock reset
+netsh advfirewall reset
 
-PS C:\WINDOWS\system32>
-PS C:\WINDOWS\system32> nslookup library.nyp.edu.sg
-Server:  dns.google
-Address:  8.8.8.8
+# Force Group Policy update and flush DNS
+gpupdate /force
+ipconfig /flushdns
 
-Non-authoritative answer:
-Name:    library.nyp.edu.sg
-Addresses:  151.101.131.10
-          151.101.67.10
-          151.101.195.10
-          151.101.3.10
+# --- 2. Remove the Scheduled Task (If it exists) ---
+Write-Host "2. Removing previous scheduled override task..." -ForegroundColor Yellow
+$TaskName = "Policy Override for PublicUser"
+schtasks /delete /tn $TaskName /f | Out-Null
+Write-Host "Previous override task removed." -ForegroundColor Green
 
-PS C:\WINDOWS\system32>
+# --- 3. Remove the Host File entries (for a true clean slate) ---
+Write-Host "3. Cleaning Host File entries..." -ForegroundColor Yellow
+$hostsPath = "C:\Windows\System32\drivers\etc\hosts"
+# Read file contents, remove lines between the override tags, and save
+(Get-Content $hostsPath) | 
+  Where-Object { $_ -notmatch "# --- START FINAL DNS OVERRIDE ---" -and $_ -notmatch "# --- END FINAL DNS OVERRIDE ---" -and $_ -notmatch "151.101" -and $_ -notmatch "0.0.0.0" } |
+  Set-Content $hostsPath -Force
+
+Write-Host "Host File cleaned." -ForegroundColor Green
